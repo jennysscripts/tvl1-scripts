@@ -1,0 +1,3301 @@
+--- Configuration ---
+local OpenOutfitMenu = true
+
+--- Services ---
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+--- Events ---
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local Events = ReplicatedStorage:WaitForChild("Events")
+local CharacterSystems = Events:WaitForChild("CharacterSystems")
+local PlayerDeathEvent = Events:WaitForChild("PlayerDeath")
+local SpawnAsCharacterEvent = Events:WaitForChild("SpawnAsCharacter")
+local SpawnAsCustomEvent = Events:WaitForChild("SpawnAsCustom")
+local guiSpecialEvent = Events:WaitForChild("guiSpecialEvent")
+local ActivateTrailVampireEvent = CharacterSystems:WaitForChild("ActivateTrailVampire")
+local DrainSpecieEnergyEvent = CharacterSystems:WaitForChild("DrainSpecieEnergy")
+local CharacterStatsEvent = CharacterSystems:WaitForChild("CharacterStats")
+local WitchSpellEvent = RemoteEvents:WaitForChild("WitchSpell")
+local SiphonEvent = CharacterSystems:WaitForChild("Siphon")
+local HarvestEvent = RemoteEvents:WaitForChild("Harvest")
+
+--- LocalPlayer ---
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+local Character
+
+--- Functions ---
+local function IsCharacterTaken(CharcterName)
+	local CharacterTable = {}
+	for i, v in pairs(ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetCharacterList"):InvokeServer()) do
+		if v == "None" then
+			CharacterTable[i] = false
+		else
+			CharacterTable[i] = true
+		end
+	end
+	if CharacterTable[CharcterName] then
+		return true
+	else
+		return false
+	end
+end
+local function StopAnimations()
+	for _, v in pairs(Character:GetDescendants()) do
+		if v:IsA("Humanoid") or v:IsA("Animator") or v:IsA("AnimationController") then
+			for _, Track in pairs(v:GetPlayingAnimationTracks()) do
+				Track:Stop()
+			end
+		end
+	end
+end
+local function FindClosestMatch(Input)
+	local InputLower = Input:lower()
+	for _, Player in ipairs(Players:GetPlayers()) do
+		local PlayerName = Player.Name:lower()
+		if PlayerName:sub(1, #InputLower) == InputLower then
+			return Player.Name
+		end
+	end
+	return nil
+end
+
+--- _G. Values ---
+_G.IncreaseHealthSpamToggle = false
+_G.InfiniteMagicToggle = false
+_G.SpamChannelCandleToggle = false
+_G.InfiniteEnergyToggle = false
+_G.NoRagdollToggle = false
+_G.CurrentTarget = "Undecided"
+
+--- _G. Spam Values ---
+_G.PhasmatosMotusIncendiamosSpamToggle = false
+_G.StranguloVentusSpamToggle = false
+_G.DelfanEotenCorSpamToggle = false
+_G.FerveretSanguisSpamToggle = false
+_G.LecutioMaximaSpamToggle = false
+_G.PoenaDolorisSpamToggle = false
+_G.ErroxFemusSpamToggle = false
+_G.IncendiaSpamToggle = false
+_G.SilencioSpamToggle = false
+_G.VentusSpamToggle = false
+_G.OssoxSpamToggle = false
+
+_G.ErroxConfractusSpamToggle = false
+_G.IgnisUbiqueSpamToggle = false
+_G.AhShaLanaSpamToggle = false
+_G.MotusSpamToggle = false
+_G.AutemSpamToggle = false
+
+_G.SanitasEstVitalisSpamToggle = false
+_G.InvisiqueSpamToggle = false
+
+--- Tables ---
+local AvailableObjects = {}
+
+--- Other ---
+local Library = loadstring(game:HttpGet"https://raw.githubusercontent.com/UILibraryHolder/Vape-UI/refs/heads/main/Source")()
+if not ReplicatedStorage:FindFirstChild("Script Values") then
+	local ScriptValuesFolder = Instance.new("Folder", ReplicatedStorage)
+	ScriptValuesFolder.Name = "Script Values"
+	local SpamListFolder = Instance.new("Folder", ScriptValuesFolder)
+	SpamListFolder.Name = "Spam List"
+end
+RunService.Heartbeat:Connect(function()
+	Character = LocalPlayer.Character
+		if _G.IncreaseHealthSpamToggle == true then
+			guiSpecialEvent:FireServer(unpack({
+				[1] = {
+					[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+					[2] = "increaseMaxHealth",
+					[3] = PlayerGui:WaitForChild("dialogueGui"),
+					[4] = 0
+				}
+			}))
+		end
+		if _G.InfiniteMagicToggle == true then
+			CharacterStatsEvent:FireServer()
+		end
+		if _G.NoRagdollToggle == true then
+			local Humanoid = Character:WaitForChild("Humanoid")
+			if Character and Humanoid then
+				if Humanoid:GetState() == Enum.HumanoidStateType.Physics then
+					Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+				end
+			end
+		end
+		if _G.SpamChannelCandleToggle == true then
+			for _, v in pairs(Backpack:GetDescendants()) do
+				if v:IsA("Tool") and v.Name == "Candle" then
+					v:WaitForChild("Handle"):WaitForChild("signal"):FireServer()
+				end
+			end
+			for _, v in pairs(Character:GetDescendants()) do
+				if v:IsA("Tool") and v.Name == "Candle" then
+					v:WaitForChild("Handle"):WaitForChild("signal"):FireServer()
+				end
+			end
+		end
+		if _G.InfiniteEnergyToggle == true then
+			DrainSpecieEnergyEvent:FireServer(unpack({
+				[1] = {
+					["Energy"] = -math.huge,
+					["StatType"] = "VampireStats"
+				}
+			}))
+			DrainSpecieEnergyEvent:FireServer(unpack({
+				[1] = {
+					["Energy"] = -math.huge,
+					["StatType"] = "WolfStats"
+				}
+			}))
+		end
+		if _G.PhasmatosMotusIncendiamosSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Phasmatos Motus Incendiamos",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.StranguloVentusSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Strangulo Ventus",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.DelfanEotenCorSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Delfan Eoten Cor",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.FerveretSanguisSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Ferveret Sanguis",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.LecutioMaximaSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Lecutio Maxima",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.PoenaDolorisSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Poena Doloris",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.ErroxFemusSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Errox Femus",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.IncendiaSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Incendia",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.SilencioSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Silencio",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.VentusSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Ventus",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.OssoxSpamToggle == true then
+			for _, v in pairs(Players:GetPlayers()) do
+				for _, SpamName in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetChildren()) do
+					if v.Name == SpamName.Name then
+						WitchSpellEvent:FireServer(unpack({
+							[1] = {
+								["Incant"] = "Ossox",
+								["Target"] = v.Character
+							}
+						}))
+					end
+				end
+			end
+		end
+		if _G.ErroxConfractusSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Errox Confractus"
+				}
+			}))
+		end
+		if _G.IgnisUbiqueSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Ignis Ubique"
+				}
+			}))
+		end
+		if _G.AhShaLanaSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Ah Sha Lana"
+				}
+			}))
+		end
+		if _G.MotusSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Motus"
+				}
+			}))
+		end
+		if _G.AutemSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Autem"
+				}
+			}))
+		end
+		if _G.SanitasEstVitalisSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Sanitas Est Vitalis"
+				}
+			}))
+		end
+		if _G.InvisiqueSpamToggle == true then
+			WitchSpellEvent:FireServer(unpack({
+				[1] = {
+					["Incant"] = "Invisique"
+				}
+			}))
+		end
+end)
+
+--- UI & The Main Code ---
+local Window = Library:Window("ₓ˚. ˚○◦˚ The Vampire Legacies 1 ˚◦○˚ .˚ₓ", Color3.fromRGB(255, 147, 172), Enum.KeyCode.Delete)
+local Tab = Window:Tab("♡ · Misc / Miscellaneous")
+Tab:Toggle("*·˚ Remove Boundaries / Barriers", false, function(Value)
+	if Value then
+		for _, v in pairs(workspace:GetChildren()) do
+			if v.Name == "Barrier Graveyard" then
+				v.Parent = Players
+			end
+		end
+		for _, v in pairs(workspace:GetChildren()) do
+			if v.Name == "Barrier Witch Hideout" then
+				v.Parent = Players
+			end
+		end
+		if workspace:FindFirstChild("CaveBarrier") then
+			workspace:WaitForChild("CaveBarrier").Parent = Players
+		end
+		if workspace:FindFirstChild("MAPWALLS") then
+			workspace:WaitForChild("MAPWALLS").Parent = Players
+		end
+		if workspace:FindFirstChild("Boundaries") then
+			workspace:WaitForChild("Boundaries").Parent = Players
+		end
+		if workspace:FindFirstChild("DevBoundary") then
+			workspace:WaitForChild("DevBoundary").Parent = Players
+		end
+		if workspace:FindFirstChild("WitchSafeZoneBarrier") then
+			workspace:WaitForChild("WitchSafeZoneBarrier").Parent = Players
+		end
+		if workspace:FindFirstChild("WitchSafeZoneBarrier2") then
+			workspace:WaitForChild("WitchSafeZoneBarrier2").Parent = Players
+		end
+		if workspace:FindFirstChild("HarvestRitual"):FindFirstChild("Barriers") then
+			workspace:WaitForChild("HarvestRitual"):WaitForChild("Barriers").Parent = Players
+		end
+	else
+		for _, v in pairs(Players:GetChildren()) do
+			if v.Name == "Barrier Graveyard" then
+				v.Parent = workspace
+			end
+		end
+		for _, v in pairs(Players:GetChildren()) do
+			if v.Name == "Barrier Witch Hideout" then
+				v.Parent = workspace
+			end
+		end
+		if Players:FindFirstChild("CaveBarrier") then
+			Players:WaitForChild("CaveBarrier").Parent = workspace
+		end
+		if Players:FindFirstChild("MAPWALLS") then
+			Players:WaitForChild("MAPWALLS").Parent = workspace
+		end
+		if Players:FindFirstChild("Boundaries") then
+			Players:WaitForChild("Boundaries").Parent = workspace
+		end
+		if Players:FindFirstChild("DevBoundary") then
+			Players:WaitForChild("DevBoundary").Parent = workspace
+		end
+		if Players:FindFirstChild("WitchSafeZoneBarrier") then
+			Players:WaitForChild("WitchSafeZoneBarrier").Parent = workspace
+		end
+		if Players:FindFirstChild("WitchSafeZoneBarrier2") then
+			Players:WaitForChild("WitchSafeZoneBarrier2").Parent = workspace
+		end
+		if Players:FindFirstChild("Barriers") then
+			Players:WaitForChild("Barriers").Parent = workspace:WaitForChild("HarvestRitual")
+		end
+	end
+end)
+Tab:Button("*·˚ Vampirism Transition", function()
+	local CharacterConfiguration = LocalPlayer:WaitForChild("CharacterConfiguration")
+	if CharacterConfiguration and not CharacterConfiguration:FindFirstChild("isCustom") then
+		PlayerDeathEvent:FireServer(unpack({[1] = {["IsCustom"] = false, ["Approved"] = true, ["Resurrect"] = true, ["Transition"] = true, ["Tribrid"] = false, ["Option"] = "ressurect"}}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This feature doesn't work for customs.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Toggle("*·˚ Toggle Wolf Turning", false, function(Value)
+	local CheckWerewolf = CharacterSystems:FindFirstChild("CheckWerewolf")
+	local WerewolfTransformationToggled = CharacterSystems:FindFirstChild("Werewolf Turning Disabled")
+	if CheckWerewolf then
+		CheckWerewolf.Name = "Werewolf Turning Disabled"
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Werewolf turning is disabled.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	elseif WerewolfTransformationToggled then
+		WerewolfTransformationToggled.Name = "CheckWerewolf"
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Werewolf turning is enabled.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Open Outfit Menu", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "changeClothes", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Self Ressurection", function()
+	local CharacterConfiguration = LocalPlayer:WaitForChild("CharacterConfiguration")
+	if CharacterConfiguration and not CharacterConfiguration:FindFirstChild("isCustom") then
+		PlayerDeathEvent:FireServer(unpack({[1] = {["IsCustom"] = false, ["Approved"] = true, ["Resurrect"] = true, ["Transition"] = false, ["Tribrid"] = false, ["Option"] = "ressurect"}}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This feature doesn't work for customs.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Get Gilbert Ring", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 18653834) then
+		if not IsCharacterTaken("Alaric Saltzman") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			local CharacterConfiguration = LocalPlayer:WaitForChild("CharacterConfiguration")
+			local CurrentCharacter = CharacterConfiguration:WaitForChild("CharacterName").Value
+			local CurrentOutfit = CharacterConfiguration:WaitForChild("OutfitName").Value
+			if CharacterConfiguration and not CharacterConfiguration:FindFirstChild("isCustom") then
+				PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+				PlayerGui:WaitForChild("Menu"):Destroy()
+				SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Alaric Saltzman", ["Outfit"] = "Classic Alaric"}}))
+				SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = CurrentCharacter, ["Outfit"] = CurrentOutfit}}))
+				wait(0.125)
+				Character.PrimaryPart.CFrame = OldCFrame
+				local CurrentCamera = workspace.CurrentCamera
+				CurrentCamera.CameraType = Enum.CameraType.Custom
+				CurrentCamera.CameraSubject = Character
+				StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+			elseif CharacterConfiguration and CharacterConfiguration:FindFirstChild("isCustom") then
+				StarterGui:SetCore("SendNotification", {
+					Title = "*·˚ Notification ˚·*",
+					Text = "This feature doesn't work for customs.",
+					Icon = "rbxassetid://111630714337304",
+					Duration = 5,
+					Button1 = "Close"
+				})
+			end
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "Alaric Saltzman is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Custom Heretic Outfit", function()
+	if not IsCharacterTaken("Oscar") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		local CharacterConfiguration = LocalPlayer:WaitForChild("CharacterConfiguration")
+		local CurrentCharacter = CharacterConfiguration:WaitForChild("CharacterName").Value
+		local CurrentOutfit = CharacterConfiguration:WaitForChild("OutfitName").Value
+		if CharacterConfiguration and not CharacterConfiguration:FindFirstChild("isCustom") then
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Approved"] = true, ["Option"] = "revive"}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCustomEvent:FireServer(unpack({[1] = {["Gender"] = "Male", ["CharDisplayName"] = "Nicholas", ["EyeColor"] = "Blue"}}))
+			guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "changeClothes", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Qetsiyah", ["Outfit"] = "Wedding Qetsiyah"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		elseif CharacterConfiguration and CharacterConfiguration:FindFirstChild("isCustom") then
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This feature doesn't work for customs.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Oscar is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Toggle("*·˚ Disable Ragdoll", _G.NoRagdollToggle, function(Value)
+	_G.NoRagdollToggle = not _G.NoRagdollToggle
+end)
+local Tab = Window:Tab("♡ · Spell Spamming")
+Tab:Label(".·˚ Spam List ˚·.")
+Tab:Button("*·˚ Clear List", function()
+	StarterGui:SetCore("SendNotification", {
+		Title = "*·˚ Notification ˚·*",
+		Text = "Spam list has been cleared.",
+		Icon = "rbxassetid://111630714337304",
+		Duration = 5,
+		Button1 = "Close"
+	})
+	for _, v in pairs(ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):GetDescendants()) do
+		v:Destroy()
+	end
+end)
+Tab:Label(".·˚ Target Spells ˚·.")
+Tab:Toggle("*·˚ Phasmatos Motus Incendiamos", _G.PhasmatosMotusIncendiamosSpamToggle, function(Value)
+	_G.PhasmatosMotusIncendiamosSpamToggle = not _G.PhasmatosMotusIncendiamosSpamToggle
+end)
+Tab:Toggle("*·˚ Strangulo Ventus", _G.StranguloVentusSpamToggle, function(Value)
+	_G.StranguloVentusSpamToggle = not _G.StranguloVentusSpamToggle
+end)
+Tab:Toggle("*·˚ Delfan Eoten Cor", _G.DelfanEotenCorSpamToggle, function(Value)
+	_G.DelfanEotenCorSpamToggle = not _G.DelfanEotenCorSpamToggle
+end)
+Tab:Toggle("*·˚ Ferveret Sanguis", _G.FerveretSanguisSpamToggle, function(Value)
+	_G.FerveretSanguisSpamToggle = not _G.FerveretSanguisSpamToggle
+end)
+Tab:Toggle("*·˚ Lecutio Maxima", _G.LecutioMaximaSpamToggle, function(Value)
+	_G.LecutioMaximaSpamToggle = not _G.LecutioMaximaSpamToggle
+end)
+Tab:Toggle("*·˚ Poena Doloris", _G.PoenaDolorisSpamToggle, function(Value)
+	_G.PoenaDolorisSpamToggle = not _G.PoenaDolorisSpamToggle
+end)
+Tab:Toggle("*·˚ Errox Femus", _G.ErroxFemusSpamToggle, function(Value)
+	_G.ErroxFemusSpamToggle = not _G.ErroxFemusSpamToggle
+end)
+Tab:Toggle("*·˚ Incendia", _G.IncendiaSpamToggle, function(Value)
+	_G.IncendiaSpamToggle = not _G.IncendiaSpamToggle
+end)
+Tab:Toggle("*·˚ Silencio", _G.SilencioSpamToggle, function(Value)
+	_G.SilencioSpamToggle = not _G.SilencioSpamToggle
+end)
+Tab:Toggle("*·˚ Ventus", _G.VentusSpamToggle, function(Value)
+	_G.VentusSpamToggle = not _G.VentusSpamToggle
+end)
+Tab:Toggle("*·˚ Ossox", _G.OssoxSpamToggle, function(Value)
+	_G.OssoxSpamToggle = not _G.OssoxSpamToggle
+end)
+Tab:Label(".·˚ Area Spells ˚·.")
+Tab:Toggle("*·˚ Errox Confractus", _G.ErroxConfractusSpamToggle, function(Value)
+	_G.ErroxConfractusSpamToggle = not _G.ErroxConfractusSpamToggle
+end)
+Tab:Toggle("*·˚ Ignis Ubique", _G.IgnisUbiqueSpamToggle, function(Value)
+	_G.IgnisUbiqueSpamToggle = not _G.IgnisUbiqueSpamToggle
+end)
+Tab:Toggle("*·˚ Ah Sha Lana", _G.AhShaLanaSpamToggle, function(Value)
+	_G.AhShaLanaSpamToggle = not _G.AhShaLanaSpamToggle
+end)
+Tab:Toggle("*·˚ Motus", _G.MotusSpamToggle, function(Value)
+	_G.MotusSpamToggle = not _G.MotusSpamToggle
+end)
+Tab:Toggle("*·˚ Autem", _G.AutemSpamToggle, function(Value)
+	_G.AutemSpamToggle = not _G.AutemSpamToggle
+end)
+Tab:Label(".·˚ Other Spells ˚·.")
+Tab:Toggle("*·˚ Sanitas Est Vitalis", _G.SanitasEstVitalisSpamToggle, function(Value)
+	_G.SanitasEstVitalisSpamToggle = not _G.SanitasEstVitalisSpamToggle
+end)
+Tab:Toggle("*·˚ Invisique", _G.InvisiqueSpamToggle, function(Value)
+	_G.InvisiqueSpamToggle = not _G.InvisiqueSpamToggle
+end)
+local Tab = Window:Tab("♡ · Stats / Statistics")
+Tab:Label(".·˚ Health Stats ˚·.")
+Tab:Button("*·˚ Increase Max Health (+200)", function()
+	guiSpecialEvent:FireServer(unpack({
+		[1] = {
+			[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+			[2] = "increaseMaxHealth",
+			[3] = PlayerGui:WaitForChild("dialogueGui"),
+			[4] = 0
+		}
+	}))
+end)
+Tab:Toggle("*·˚ Increase Max Health Spam", false, function(Value)
+	_G.IncreaseHealthSpamToggle = not _G.IncreaseHealthSpamToggle
+end)
+Tab:Label(".·˚ Magic Stats ˚·.")
+Tab:Toggle("*·˚ Infinite Magic (Doesn't Work For Siphoners)", false, function(Value)
+	_G.InfiniteMagicToggle = not _G.InfiniteMagicToggle
+end)
+Tab:Button("*·˚ Siphon Random Dark Object", function()
+	local OldCFrame = Character.PrimaryPart.CFrame
+	local DarkObjectSpawns = workspace:WaitForChild("DarkObjectSpawns")
+	for _, spawn in pairs(DarkObjectSpawns:GetChildren()) do
+		local DarkObject = spawn:FindFirstChild("DarkObject")
+		if DarkObject and DarkObject:FindFirstChild("Siphoned") then
+			if not DarkObject:WaitForChild("Siphoned").Value then
+				table.insert(AvailableObjects, DarkObject)
+			end
+		end
+	end
+	if #AvailableObjects > 0 then
+		local RandomObject = AvailableObjects[math.random(1, #AvailableObjects)]
+		Character.PrimaryPart.CFrame = RandomObject.CFrame
+		wait(0.25)
+		SiphonEvent:FireServer(unpack({
+			[1] = {
+				["Target"] = RandomObject,
+				["HoldPress"] = Character:WaitForChild("Controller"):WaitForChild("Hold")
+			}
+		}))
+		wait(0.5)
+		Character.PrimaryPart.CFrame = OldCFrame
+	end
+end)
+Tab:Button("*·˚ Increase Max Magic (+200)", function()
+	guiSpecialEvent:FireServer(unpack({
+		[1] = {
+			[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+			[2] = "increaseMaxMagic",
+			[3] = PlayerGui:WaitForChild("dialogueGui"),
+			[4] = 0
+		}
+	}))
+end)
+Tab:Toggle("*·˚ Spam Channel Candle", _G.SpamChannelCandleToggle, function(Value)
+	_G.SpamChannelCandleToggle = not _G.SpamChannelCandleToggle
+end)
+Tab:Button("*·˚ Channel Candle", function()
+	for _, v in pairs(Backpack:GetDescendants()) do
+		if v:IsA("Tool") and v.Name == "Candle" then
+			v:WaitForChild("Handle"):WaitForChild("signal"):FireServer()
+		end
+	end
+	for _, v in pairs(Character:GetDescendants()) do
+		if v:IsA("Tool") and v.Name == "Candle" then
+			v:WaitForChild("Handle"):WaitForChild("signal"):FireServer()
+		end
+	end
+end)
+Tab:Label(".·˚ Thirst Stats ˚·.")
+Tab:Toggle("*·˚ Auto Feed", false, function(Value)
+
+end)
+Tab:Label(".·˚ Energy Stats ˚·.")
+Tab:Button("*·˚ Increase Max Energy (+80)", function()
+	guiSpecialEvent:FireServer(unpack({
+		[1] = {
+			[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+			[2] = "increaseMaxEnergy",
+			[3] = PlayerGui:WaitForChild("dialogueGui"),
+			[4] = 0
+		}
+	}))
+end)
+Tab:Toggle("*·˚ Infinite Energy", _G.InfiniteEnergyToggle, function(Value)
+	_G.InfiniteEnergyToggle = not _G.InfiniteEnergyToggle
+end)
+local Tab = Window:Tab("♡ · Tools / Items")
+Tab:Label(".·˚ Free Tools ˚·.")
+Tab:Button("*·˚ 'Specialty' Drink", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "receiveBloodDrink", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ White Oak Ash", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "freeStake", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "freeStake", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "freeStake", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	wait(0.025)
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "receiveWhiteOakAsh", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Wooden Stake", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "freeStake", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Homework", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "getHomework", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Beverage", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "receiveBeverage", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Bouquet", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "flowers", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Button("*·˚ Coffee", function()
+	guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "receiveCoffee", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+end)
+Tab:Label(".·˚ Coin Tools ˚·.")
+Tab:Button("*·˚ Wolfsbane Grenade (120$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 120 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Wolfsbane"):WaitForChild("ClickDetector"))
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Wolfsbane"):WaitForChild("ClickDetector"))
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Wolfsbane"):WaitForChild("ClickDetector"))
+		wait(0.025)
+		ReplicatedStorage:WaitForChild("Events"):WaitForChild("guiSpecialEvent"):FireServer(unpack({
+			[1] = {
+				[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+				[2] = "wolfNade",
+				[3] = PlayerGui:WaitForChild("dialogueGui"),
+				[4] = 0
+			}
+		}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Enchanted Dagger (20$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 20 then
+		guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "buyDagger", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Vervain Grenade (120$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 120 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Vervain"):WaitForChild("ClickDetector"))
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Vervain"):WaitForChild("ClickDetector"))
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Vervain"):WaitForChild("ClickDetector"))
+		wait(0.025)
+		ReplicatedStorage:WaitForChild("Events"):WaitForChild("guiSpecialEvent"):FireServer(unpack({
+			[1] = {
+				[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"),
+				[2] = "vervNade",
+				[3] = PlayerGui:WaitForChild("dialogueGui"),
+				[4] = 0
+			}
+		}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Vervain Syringe (80$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 80 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("VervainSyringe"):WaitForChild("ClickDetector"))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Golden Arrow (600$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 600 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("GoldenArrow"):WaitForChild("ClickDetector"))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Wolfsbane (40$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 40 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Wolfsbane"):WaitForChild("ClickDetector"))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Moon Vial (20$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 20 then
+		guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "buyPotion", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Vervain (40$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 40 then
+		fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("Vervain"):WaitForChild("ClickDetector"))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Candle (20$)", function()
+	local Coins = LocalPlayer:WaitForChild("Coins").Value
+	if Coins >= 20 then
+		guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "buyCandle", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Not enough coins.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Robux Tools ˚·.")
+Tab:Button("*·˚ 3 Use White Oak Stake (60R$)", function()
+	fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("3UseWhiteOakStake"):WaitForChild("ClickDetector"))
+end)
+Tab:Button("*·˚ White Oak Stake (25$)", function()
+	fireclickdetector(workspace:WaitForChild("StakesRegisters"):WaitForChild("WhiteOakStake"):WaitForChild("ClickDetector"))
+end)
+local Tab = Window:Tab("♡ · Animations")
+Tab:Label(".·˚ The Vampire Legacies 1 ˚·.")
+Tab:Dropdown("*·˚ Male", {"Default #1", "Default #2", "Default #3"}, function(Option)
+	if Option == "Default #1" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://5532734372"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://5532734372"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5684397250"
+		end
+		StopAnimations()
+	elseif Option == "Default #2" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://6828892549"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://6828892549"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5684397250"
+		end
+		StopAnimations()
+	elseif Option == "Default #3" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://5677227721"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://5677227721"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5684397250"
+		end
+		StopAnimations()
+	end
+end)
+Tab:Dropdown("*·˚ Female", {"Default #1", "Default #2", "Hand On Hip", "Hand On Hip + Checking Nails", "Hand On Hip (Other Side)", "Arms In Front"}, function(Option)
+	if Option == "Default #1" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://5820040640"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://5820040640"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	elseif Option == "Default #2" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://6828892549"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://6828892549"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	elseif Option == "Hand On Hip" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://7218083425"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://7218083425"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	elseif Option == "Hand On Hip + Checking Nails" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://6489524174"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://6489524174"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	elseif Option == "Hand On Hip (Other Side)" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://6465419190"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://6465419190"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	elseif Option == "Arms In Front" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://7258995056"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://7258995056"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://5532975691"
+		end
+		StopAnimations()
+	end
+end)
+Tab:Label(".·˚ The Vampire Legacies 2 ˚·.")
+Tab:Dropdown("*·˚ Male", {"Default", "Male Original Vampire", "Marcel Gerard", "Silas"}, function(Option)
+	if Option == "Default" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://17590595476"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://17590595476"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897215158"
+		end
+		StopAnimations()
+	elseif Option == "Male Original Vampire" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://14774761368"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://14774761368"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897215158"
+		end
+		StopAnimations()
+	elseif Option == "Marcel Gerard" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18522326044"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18522326044"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897215158"
+		end
+		StopAnimations()
+	elseif Option == "Silas" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18298109865"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18298109865"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://18298126106"
+		end
+		StopAnimations()
+	end
+end)
+Tab:Dropdown("*·˚ Female", {"Default", "Hand On Hip", "Hands On Hips", "Arms In Front", "Arms Crossed", "Distressed"}, function(Option)
+	if Option == "Default" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://12821182159"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://12821182159"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897211373"
+		end
+		StopAnimations()
+	elseif Option == "Hand On Hip" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18321812342"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18321812342"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://18321800242"
+		end
+		StopAnimations()
+	elseif Option == "Hands On Hips" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18321833902"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18321833902"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://18321823707"
+		end
+		StopAnimations()
+	elseif Option == "Arms In Front" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://91840392975340"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://91840392975340"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897211373"
+		end
+		StopAnimations()
+	elseif Option == "Arms Crossed" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18321595536"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18321595536"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://18321582269"
+		end
+		StopAnimations()
+	elseif Option == "Distressed" then
+		StopAnimations()	
+		local Animate = Character:WaitForChild("Animate")
+		if Animate then
+			Animate:WaitForChild("idle"):WaitForChild("Animation1").AnimationId = "rbxassetid://18318581876"
+			Animate:WaitForChild("idle"):WaitForChild("Animation2").AnimationId = "rbxassetid://18318581876"
+			Animate:WaitForChild("run"):WaitForChild("RunAnim").AnimationId = "rbxassetid://13897211373"
+		end
+		StopAnimations()
+	end
+end)
+Tab:Label(".·˚ Other ˚·.")
+Tab:Button("*·˚ Stop Animations", function()
+	StopAnimations()
+end)
+local Tab = Window:Tab("♡ · Characters")
+local CustomDisplayName = nil
+local CustomEyeColor = nil
+local CustomGender = nil
+Tab:Label(".·˚ Custom ˚·.")
+Tab:Textbox("*·˚ Display Name", true, function(Text)
+	CustomDisplayName = Text
+end)
+Tab:Dropdown("*·˚ Eye Color", {"Blue", "Green", "Brown"}, function(Option)
+	CustomEyeColor = Option
+end)
+Tab:Dropdown("*·˚ Gender", {"Male", "Female"}, function(Option)
+	CustomGender = Option
+end)
+Tab:Button("*·˚ Spawn", function()
+	if CustomDisplayName == nil or CustomEyeColor == nil or CustomGender == nil then 
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You have to select a name, gender and an eye color before spawning.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+		return 
+	end
+	local OldCFrame = Character.PrimaryPart.CFrame
+	PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+	PlayerGui:WaitForChild("Menu"):Destroy()
+	SpawnAsCustomEvent:FireServer(unpack({[1] = {["Gender"] = CustomGender, ["CharDisplayName"] = CustomDisplayName, ["EyeColor"] = CustomEyeColor}}))
+	wait(0.125)
+	Character.PrimaryPart.CFrame = OldCFrame
+	local CurrentCamera = workspace.CurrentCamera
+	CurrentCamera.CameraType = Enum.CameraType.Custom
+	CurrentCamera.CameraSubject = Character
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+end)
+Tab:Label(".·˚ Elder Witches ˚·.")
+Tab:Button("*·˚ Genevieve", function()
+	if not IsCharacterTaken("Genevieve") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Genevieve", ["Outfit"] = "Classic Genevieve"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Bastianna Natale", function()
+	if not IsCharacterTaken("Bastianna Natale") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Bastianna Natale", ["Outfit"] = "Classic Bastianna"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Agnes", function()
+	if not IsCharacterTaken("Agnes") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Agnes", ["Outfit"] = "Classic Agnes"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Josephine LaRue", function()
+	if not IsCharacterTaken("Josephine LaRue") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Josephine LaRue", ["Outfit"] = "Classic Josephine"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Vampires ˚·.")
+Tab:Dropdown("*·˚ Caroline Forbes", {"Classic Caroline", "60's Decade Dance", "Cheerleader Caroline", "Winter Caroline"}, function(Option)
+	if not IsCharacterTaken("Caroline Forbes") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Caroline Forbes", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Milton Greasley", function()
+	if not IsCharacterTaken("Milton Greasley") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Milton Greasley", ["Outfit"] = "Classic Milton"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Sage", function()
+	if not IsCharacterTaken("Sage") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Sage", ["Outfit"] = "Classic Sage"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Lorenzo “Enzo” St. John", function()
+	if not IsCharacterTaken("Lorenzo “Enzo” St. John") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lorenzo “Enzo” St. John", ["Outfit"] = "Classic Lorenzo"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Sebastian", function()
+	if not IsCharacterTaken("Sebastian") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Sebastian", ["Outfit"] = "Classic Sebastian"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Lucien Castle", function()
+	if not IsCharacterTaken("Lucien Castle") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lucien Castle", ["Outfit"] = "Classic Lucien"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Aya Al-Rashid", function()
+	if not IsCharacterTaken("Aya Al-Rashid") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Aya Al-Rashid", ["Outfit"] = "Classic Aya"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Aurora De Martel", {"Classic Aurora", "Legacies Aurora"}, function(Option)
+	if not IsCharacterTaken("Aurora De Martel") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Aurora De Martel", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Tristan De Martel", function()
+	if not IsCharacterTaken("Tristan De Martel") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Tristan De Martel", ["Outfit"] = "Classic Tristan"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Isobel Flemming", function()
+	if not IsCharacterTaken("Isobel Flemming") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Isobel Flemming", ["Outfit"] = "Classic Isobel"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Katherine Pierce", {"Classic Katherine", "Katherine's Disguise", "Original Katherine", "Human Katherine", "1864 Katherine", "Halloween Katherine"}, function(Option)
+	if not IsCharacterTaken("Katherine Pierce") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Katherine Pierce", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Pearl Zhu", function()
+	if not IsCharacterTaken("Pearl Zhu") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Pearl Zhu", ["Outfit"] = "Pearl Casual"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Lexi Branson", function()
+	if not IsCharacterTaken("Lexi Branson") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lexi Branson", ["Outfit"] = "Classic Lexi"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Lily Salvatore", function()
+	if not IsCharacterTaken("Lily Salvatore") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lily Salvatore", ["Outfit"] = "Classic Lily"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Marcel Gerard", function()
+	if not IsCharacterTaken("Marcel Gerard") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Marcel Gerard", ["Outfit"] = "Classic Marcel"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Rose", function()
+	if not IsCharacterTaken("Rose") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Rose", ["Outfit"] = "Classic Rose"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Stefan Salvatore", {"Classic Stefan", "Stefan's Secondary Outfit", "Football Stefan", "1864 Stefan", "Halloween Stefan"}, function(Option)
+	if not IsCharacterTaken("Stefan Salvatore") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Stefan Salvatore", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Annabelle Zhu", function()
+	if not IsCharacterTaken("Annabelle Zhu") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Annabelle Zhu", ["Outfit"] = "Classic Annabelle"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Damon Salvatore", {"Classic Damon", "1864 Damon", "Other Damon", "Halloween Damon"}, function(Option)
+	if not IsCharacterTaken("Damon Salvatore") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Damon Salvatore", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Nadia Petrova", function()
+	if not IsCharacterTaken("Nadia Petrova") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Nadia Petrova", ["Outfit"] = "Classic Nadia"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Vicki Donovan", {"Classic Vicki", "Halloween Vicki"}, function(Option)
+	if not IsCharacterTaken("Vicki Donovan") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Vicki Donovan", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Josh Rosza", function()
+	if not IsCharacterTaken("Josh Rosza") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Josh Rosza", ["Outfit"] = "Classic Josh"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Witches ˚·.")
+Tab:Dropdown("*·˚ Davina Claire", {"Classic Davina", "Alternate Davina", "Elegant Davina", "Harvest Davina"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 21203667) then
+		if not IsCharacterTaken("Davina Claire") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Davina Claire", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Hope Mikaelson", {"Casual Hope", "Hope School Uniform", "Hope Tribrid", "Red Riding Hope"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824718) then
+		if not IsCharacterTaken("Hope Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Hope Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Dahlia", {"Classic Dahlia", "Church Dahlia", "Brown Coat Dahlia"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598207) then
+		if not IsCharacterTaken("Dahlia") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Dahlia", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+
+	end
+end)
+Tab:Dropdown("*·˚ Dark Josie Saltzman", {"Dark Josie", "Dark Josie2", "Dark Queen", "Blue Sweater", "Alt Dark Josie"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 12417656) then
+		if not IsCharacterTaken("Dark Josie Saltzman") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Dark Josie Saltzman", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Esther Mikaelson", {"Classic Esther", "Originals Esther", "Ball Esther"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 14383447) then
+		if not IsCharacterTaken("Esther Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Esther Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Qetsiyah", {"Tessa", "Wedding Qetsiyah", "Halloween Qetsiyah"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11932873) then
+		if not IsCharacterTaken("Qetsiyah") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Qetsiyah", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Bonnie Bennett", {"Classic Bonnie", "Bonnie Senior Year", "Cheerleader Bonnie", "Curly Bonnie", "Prison world Bonnie", "Expression Bonnie", "Winter Bonnie"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11932873) then
+		if not IsCharacterTaken("Bonnie Bennett") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Bonnie Bennett", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Josette “Jo” Parker", {"Classic Josette", "Josette Doctor"}, function(Option)
+	if not IsCharacterTaken("Josette “Jo” Parker") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Josette “Jo” Parker", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Vincent Griffith", function()
+	if not IsCharacterTaken("Vincent Griffith") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Vincent Griffith", ["Outfit"] = "Classic Vincent"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Freya Mikaelson", {"Classic Freya", "Long hair Freya"}, function(Option)
+	if not IsCharacterTaken("Freya Mikaelson") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Freya Mikaelson", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Olivia Parker", function()
+	if not IsCharacterTaken("Olivia Parker") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Olivia Parker", ["Outfit"] = "Classic Olivia"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Alyssa Chang", function()
+	if not IsCharacterTaken("Alyssa Chang") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Alyssa Chang", ["Outfit"] = "Classic Alyssa"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Monique Deveraux", {"Classic Monique", "Harvest Monique"}, function(Option)
+	if not IsCharacterTaken("Monique Deveraux") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Monique Deveraux", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Luke Parker", function()
+	if not IsCharacterTaken("Luke Parker") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Luke Parker", ["Outfit"] = "Classic Luke"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Sophie Deveraux", function()
+	if not IsCharacterTaken("Sophie Deveraux") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Sophie Deveraux", ["Outfit"] = "Classic Sophie"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Lizzie Saltzman", {"Classic Lizzie", "Lizzie's Old Uniform"}, function(Option)
+	if not IsCharacterTaken("Lizzie Saltzman") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lizzie Saltzman", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Lucy Bennett", function()
+	if not IsCharacterTaken("Lucy Bennett") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Lucy Bennett", ["Outfit"] = "Classic Lucy"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Sheila Bennett", function()
+	if not IsCharacterTaken("Sheila Bennett") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Sheila Bennett", ["Outfit"] = "Classic Sheila"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Kai Parker", {"Classic Kai", "Formal Kai"}, function(Option)
+	if not IsCharacterTaken("Kai Parker") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Kai Parker", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Celeste Dubois", function()
+	if not IsCharacterTaken("Celeste Dubois") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Celeste Dubois", ["Outfit"] = "Classic Celeste"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Penelope Park", function()
+	if not IsCharacterTaken("Penelope Park") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Penelope Park", ["Outfit"] = "Classic Penelope"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Josie Saltzman", {"Classic Josie", "Josie's Old Uniform", "Josie white top"}, function(Option)
+	if not IsCharacterTaken("Josie Saltzman") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Josie Saltzman", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Originals ˚·.")
+Tab:Dropdown("*·˚ Elijah Mikaelson", {"Classic Elijah", "Formal Elijah"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824715) then
+		if not IsCharacterTaken("Elijah Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Elijah Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Kol Mikaelson", {"Classic Kol", "Formal Kol"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 12118853) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 18653810) then
+		if not IsCharacterTaken("Kol Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Kol Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Mikael Mikaelson", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824715) then
+		if not IsCharacterTaken("Mikael Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Mikael Mikaelson", ["Outfit"] = "Classic Mikael"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Rebekah Mikaelson", {"Classic Rebekah", "Casual Rebekah", "Cheerleader Rebekah", "Curly Rebekah", "Ball Rebekah"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824712) then
+		if not IsCharacterTaken("Rebekah Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Rebekah Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Finn Mikaelson", {"Classic Finn", "Formal Finn"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 12119564) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 18653810) then
+		if not IsCharacterTaken("Finn Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Finn Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Niklaus Mikaelson", {"Classic Niklaus", "Formal Niklaus"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824742) then
+		if not IsCharacterTaken("Niklaus Mikaelson") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Niklaus Mikaelson", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Werewolves ˚·.")
+Tab:Button("*·˚ Rafael Waithe", function()
+	if not IsCharacterTaken("Rafael Waithe") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Rafael Waithe", ["Outfit"] = "Classic Rafael"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Aiden", function()
+	if not IsCharacterTaken("Aiden") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Aiden", ["Outfit"] = "Classic Aiden"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Keelin Malraux", function()
+	if not IsCharacterTaken("Keelin Malraux") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Keelin Malraux", ["Outfit"] = "Classic Keelin"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Mason Lockwood", function()
+	if not IsCharacterTaken("Mason Lockwood") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Mason Lockwood", ["Outfit"] = "Classic Mason"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Finch Tarrayo", function()
+	if not IsCharacterTaken("Finch Tarrayo") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Finch Tarrayo", ["Outfit"] = "Classic Finch"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Jules", function()
+	if not IsCharacterTaken("Jules") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Jules", ["Outfit"] = "Classic Jules"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Jackson Kenner", function()
+	if not IsCharacterTaken("Jackson Kenner") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Jackson Kenner", ["Outfit"] = "Classic Jackson"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Jed", function()
+	if not IsCharacterTaken("Jed") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Jed", ["Outfit"] = "Classic Jed"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Heretics ˚·.")
+Tab:Dropdown("*·˚ Beau", {"Classic Beau", "Beau Jacket"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598191) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11826503) then
+		if not IsCharacterTaken("Beau") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Beau", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Valerie Tulle", {"Classic Valerie", "Valerie Cardigan"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598201) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824756) then
+		if not IsCharacterTaken("Valerie Tulle") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Valerie Tulle", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Mary Louise", {"Classic Mary", "Alt Mary", "Halloween Mary"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598191) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11824750) then
+		if not IsCharacterTaken("Mary Louise") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Mary Louise", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Nora Hildegard", {"Classic Nora", "New Nora", "Halloween Nora"}, function(Option)
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598191) or MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 16829554) then
+		if not IsCharacterTaken("Nora Hildegard") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Nora Hildegard", ["Outfit"] = Option}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Oscar", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598201) then
+		if not IsCharacterTaken("Oscar") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Oscar", ["Outfit"] = "Classic Oscar"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Malcom", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 17598201) then
+		if not IsCharacterTaken("Malcom") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Malcom", ["Outfit"] = "Classic Malcom"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Mortals ˚·.")
+Tab:Button("*·˚ Alaric Saltzman", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 18653834) then
+		if not IsCharacterTaken("Alaric Saltzman") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Alaric Saltzman", ["Outfit"] = "Classic Alaric"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Camille O'Connell", function()
+	if not IsCharacterTaken("Camille O'Connell") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Camille O'Connell", ["Outfit"] = "Classic Camille"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Jenna Sommers", function()
+	if not IsCharacterTaken("Jenna Sommers") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Jenna Sommers", ["Outfit"] = "Classic Jenna"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Carol Lockwood", function()
+	if not IsCharacterTaken("Carol Lockwood") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Carol Lockwood", ["Outfit"] = "Classic Carol"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Jeremy Gilbert", function()
+	if not IsCharacterTaken("Jeremy Gilbert") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Jeremy Gilbert", ["Outfit"] = "Classic Jeremy"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Matt Donovan", {"Classic Matt", "Football Matt"}, function(Option)
+	if not IsCharacterTaken("Matt Donovan") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Matt Donovan", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Liz Forbes", function()
+	if not IsCharacterTaken("Liz Forbes") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Liz Forbes", ["Outfit"] = "Classic Liz"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Elena Gilbert", {"Classic Elena", "Casual Elena", "No Humanity Elena", "Cheerleader Elena", "Human Elena", "Halloween Elena", "Winter Elena"}, function(Option)
+	if not IsCharacterTaken("Elena Gilbert") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Elena Gilbert", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Phoenix ˚·.")
+Tab:Button("*·˚ Landon Kirby", function()
+	if MarketplaceService:UserOwnsGamePassAsync(LocalPlayer.UserId, 11912089) then
+		if not IsCharacterTaken("Landon Kirby") then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+			PlayerGui:WaitForChild("Menu"):Destroy()
+			SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Landon Kirby", ["Outfit"] = "Classic Landon"}}))
+			wait(0.125)
+			Character.PrimaryPart.CFrame = OldCFrame
+			local CurrentCamera = workspace.CurrentCamera
+			CurrentCamera.CameraType = Enum.CameraType.Custom
+			CurrentCamera.CameraSubject = Character
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "This character is currently occupied.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "You do not own this character.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Hybrids ˚·.")
+Tab:Button("*·˚ Hayley Marshall", function()
+	if not IsCharacterTaken("Hayley Marshall") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Hayley Marshall", ["Outfit"] = "Classic Hayley"}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Dropdown("*·˚ Tyler Lockwood", {"Classic Tyler", "Football Tyler"}, function(Option)
+	if not IsCharacterTaken("Tyler Lockwood") then
+		local OldCFrame = Character.PrimaryPart.CFrame
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "Tyler Lockwood", ["Outfit"] = Option}}))
+		wait(0.125)
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This character is currently occupied.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Other ˚·.")
+Tab:Button("*·˚ Become A Black Character", function()
+	local OldCFrame = Character.PrimaryPart.CFrame
+	PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+	PlayerGui:WaitForChild("Menu"):Destroy()
+	SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = "123", ["Outfit"] = "456"}}))
+	wait(0.125)
+	Character.PrimaryPart.CFrame = OldCFrame
+	local CurrentCamera = workspace.CurrentCamera
+	CurrentCamera.CameraType = Enum.CameraType.Custom
+	CurrentCamera.CameraSubject = Character
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)	
+end)
+local Tab = Window:Tab("♡ · Species")
+Tab:Label(".·˚ Configuration ˚·.")
+local AddGilbertRing = false
+local SpeciesChangerName = nil
+Tab:Textbox("*·˚ Enter Character Name", true, function(Text)
+	SpeciesChangerName = Text
+end)
+Tab:Toggle("*·˚ Open Outfit Menu", OpenOutfitMenu, function(Value)
+	OpenOutfitMenu = not OpenOutfitMenu
+end)
+Tab:Label(".·˚ Specie List ˚·.")
+Tab:Button("*·˚ Become A Random Species", function()
+	if SpeciesChangerName == nil then
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Enter a name for your character first.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+		return
+	end
+	local OldCFrame = Character.PrimaryPart.CFrame
+	local CharacterConfiguration = LocalPlayer:WaitForChild("CharacterConfiguration")
+	local CurrentCharacter = CharacterConfiguration:WaitForChild("CharacterName").Value
+	local CurrentOutfit = CharacterConfiguration:WaitForChild("OutfitName").Value
+	if CharacterConfiguration and not CharacterConfiguration:FindFirstChild("isCustom") then
+		PlayerDeathEvent:FireServer(unpack({[1] = {["Option"] = "respawn", ["Approved"] = true}}))
+		PlayerGui:WaitForChild("Menu"):Destroy()
+		SpawnAsCustomEvent:FireServer(unpack({[1] = {["Gender"] = "Male", ["CharDisplayName"] = SpeciesChangerName, ["EyeColor"] = "Blue"}}))
+		SpawnAsCharacterEvent:FireServer(unpack({[1] = {["CharName"] = CurrentCharacter, ["Outfit"] = CurrentOutfit}}))
+		wait(0.125)
+		if OpenOutfitMenu == true then
+			guiSpecialEvent:FireServer(unpack({[1] = {[1] = PlayerGui:WaitForChild("dialogueGui"):WaitForChild("dialogueScript"), [2] = "changeClothes", [3] = PlayerGui:WaitForChild("dialogueGui"), [4] = 0}}))
+		end
+		Character.PrimaryPart.CFrame = OldCFrame
+		local CurrentCamera = workspace.CurrentCamera
+		CurrentCamera.CameraType = Enum.CameraType.Custom
+		CurrentCamera.CameraSubject = Character
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	elseif CharacterConfiguration and CharacterConfiguration:FindFirstChild("isCustom") then
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "This feature doesn't work for customs.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+local Tab = Window:Tab("♡ · Target")
+Tab:Label(".·˚ Enter a username to use the features below. ˚·.")
+Tab:Textbox("*·˚ Enter Username", true, function(Text)
+	local ClosestMatch = FindClosestMatch(Text)
+	if ClosestMatch then
+		_G.CurrentTarget = ClosestMatch
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "A match was found for your target: " .. ClosestMatch,
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	else
+		_G.CurrentTarget = "Undecided"
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "No match found.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Check Current", function()
+	if not (_G.CurrentTarget == "Undecided") then
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = 'Your current target is "' .. _G.CurrentTarget .. '"',
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Target not found.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Label(".·˚ Targeting Features ˚·.")
+Tab:Button("*·˚ Add / Remove From Spam List", function()
+	local TargetPlayer = Players:FindFirstChild(_G.CurrentTarget)
+	if TargetPlayer then
+		if not ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):FindFirstChild(TargetPlayer.Name) then
+			local Value = Instance.new("BoolValue", ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"))
+			Value.Name = TargetPlayer.Name
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "Target added to the list.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		else
+			local Value = ReplicatedStorage:WaitForChild("Script Values"):WaitForChild("Spam List"):FindFirstChild(TargetPlayer.Name)
+			if Value then
+				Value:Destroy()
+				StarterGui:SetCore("SendNotification", {
+					Title = "*·˚ Notification ˚·*",
+					Text = "Target removed from the list.",
+					Icon = "rbxassetid://111630714337304",
+					Duration = 5,
+					Button1 = "Close"
+				})
+			end
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Target not found.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Button("*·˚ Teleport To Target", function()
+	local TargetPlayer = Players:FindFirstChild(_G.CurrentTarget)
+	if TargetPlayer then
+		local TargetCharacter = TargetPlayer.Character
+		if TargetCharacter then
+			Character.PrimaryPart.CFrame = TargetCharacter.PrimaryPart.CFrame
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Target not found.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
+Tab:Toggle("*·˚ Spectate Target", false, function(Value)
+	if Value then
+		local TargetPlayer = Players:FindFirstChild(_G.CurrentTarget)
+		if TargetPlayer then
+			local TargetCharacter = TargetPlayer.Character
+			if TargetCharacter then
+				workspace.CurrentCamera.CameraSubject = TargetCharacter:WaitForChild("Humanoid")
+			end
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "*·˚ Notification ˚·*",
+				Text = "Target not found.",
+				Icon = "rbxassetid://111630714337304",
+				Duration = 5,
+				Button1 = "Close"
+			})
+		end
+	else
+		workspace.CurrentCamera.CameraSubject = Character:WaitForChild("Humanoid")
+	end
+end)
+Tab:Button("*·˚ Harvest Target", function()
+	local TargetPlayer = Players:FindFirstChild(_G.CurrentTarget)
+	if TargetPlayer then
+		local TargetCharacter = TargetPlayer.Character
+		if TargetCharacter then
+			local OldCFrame = Character.PrimaryPart.CFrame
+			wait(0.25)
+			Character.PrimaryPart.CFrame = workspace:WaitForChild("SolarisPentagram"):WaitForChild("SolarisIn").CFrame
+			wait(0.5)
+			HarvestEvent:FireServer(TargetPlayer)
+			wait(1)
+			Character.PrimaryPart.CFrame = OldCFrame
+		end
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "*·˚ Notification ˚·*",
+			Text = "Target not found.",
+			Icon = "rbxassetid://111630714337304",
+			Duration = 5,
+			Button1 = "Close"
+		})
+	end
+end)
